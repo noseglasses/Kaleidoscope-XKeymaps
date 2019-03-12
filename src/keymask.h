@@ -105,10 +105,10 @@ struct Bitfield<1> {
 #define BITFIELD_PROGMEM(VAR_NAME, ...) BITFIELD__(VAR_NAME, const PROGMEM, __VA_ARGS__)           
     
 #define KEYMASK_STACKED(VAR_NAME, ...) \
-    BITFIELD(VAR_NAME, KEYMAP_STACKED_LIST(__VA_ARGS__))
+    BITFIELD(VAR_NAME, KEYMAP_STACKED_LIST(0 /*default for non-existent keys*/, __VA_ARGS__))
     
 #define KEYMASK_STACKED_PROGMEM(VAR_NAME, ...) \
-    BITFIELD_PROGMEM(VAR_NAME, KEYMAP_STACKED_LIST(__VA_ARGS__))
+    BITFIELD_PROGMEM(VAR_NAME, KEYMAP_STACKED_LIST(0 /*default for non-existent keys*/, __VA_ARGS__))
     
 bool isBitSetP(const void *bit_field, uint8_t raw_pos);
 template<typename Bitfield__>

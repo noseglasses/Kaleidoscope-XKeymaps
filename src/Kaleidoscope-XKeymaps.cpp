@@ -19,9 +19,9 @@
 namespace kaleidoscope {
 namespace xkeymaps {
 
-void keyFromSparceKeymap(uint8_t row, uint8_t col,
+void keyFromSparseKeymap(uint8_t row, uint8_t col,
                         Key &key,
-                        const SparseKeymapEntry *sparce_keymap, 
+                        const SparseKeymapEntry *sparse_keymap, 
                         uint8_t entry_count)
 {
    uint8_t test_raw_pos = row*COLS + col;
@@ -35,7 +35,7 @@ void keyFromSparceKeymap(uint8_t row, uint8_t col,
    
 	while (first <= last)
 	{
-      uint8_t raw_pos = pgm_read_word(&(sparce_keymap[middle].raw_pos_));
+      uint8_t raw_pos = pgm_read_word(&(sparse_keymap[middle].raw_pos_));
       
 		if(raw_pos < test_raw_pos)
 		{
@@ -43,7 +43,7 @@ void keyFromSparceKeymap(uint8_t row, uint8_t col,
 		}
 		else if(raw_pos == test_raw_pos)
 		{
-         key = Key{pgm_read_word(&(sparce_keymap[middle].raw_key_))};
+         key = Key{pgm_read_word(&(sparse_keymap[middle].raw_key_))};
          return;
 		}
 		else

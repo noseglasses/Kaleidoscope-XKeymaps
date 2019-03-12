@@ -17,16 +17,34 @@
 #pragma once
 
 #include "Kaleidoscope.h"
+#include "kaleidoscope/macro_helpers.h"
+#include "keymask.h"
 
 // Usage example:
 //
-// /* We use enum codenames here for slots to prevent mixing them 
+// KEYMASK_STACKED_PROGMEM(my_keymask, 
+//    0, 0, 0, 0, 0, 0, 0,
+//    0, 1, 1, 1, 1, 1, 0,
+//    0, 1, 1, 1, 1, 1,
+//    0, 0, 0, 0, 1, 1, 1,
+//             0, 1, 1, 0,
+//                      0,
+//                      
+//    0, 0, 0, 0, 0, 0, 0, 
+//    0, 1, 1, 1, 1, 1, 0, 
+//       1, 1, 1, 1, 1, 0, 
+//    1, 1, 1, 0, 0, 0, 0,
+//    0, 1, 1, 0,
+//    0
+// );
+//
+// /* We use enum codenames here for keymaps to prevent mixing them 
 //    up with layer ids (tree node ids) */
 // 
-// enum Slots { Base, Snap, Crackle, Pop, Fish, Cupid };
+// enum Keymaps { Base, Snap, Crackle, Pop, Fish, Cupid, Storm};
 // 
-// XKEYMAP_SLOTS(XXX /* The fallback key */,
-//   XKEYMAP_SLOT_STACKED(Base, 
+// XKEYMAPS(XXX /* The fallback key */,
+//   XKEYMAP_STACKED(Base, 
 //    ___,          Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
 //    Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
 //    Key_PageUp,   Key_A, Key_S, Key_D, Key_F, Key_G,
@@ -41,21 +59,22 @@
 //    Key_RightShift, Key_LeftAlt, Key_Spacebar, Key_RightControl,
 //    ShiftToLayer(FUNCTION) 
 //   )
-//   XKEYMAP_SLOT_SPARSE(Snap, Key_Transparent /* the default key */,
+//   XKEYMAP_SPARSE(Snap, Key_Transparent /* the default key */,
 //      /* Important: Sparse entry must be listed in ascending order of
 //                    row*COLS + col evaluated for their (row/col) pairs. */
-//      XKEYMAP_SLOT_SPARSE_ENTRY(2, 3, Key_A),
-//      XKEYMAP_SLOT_SPARSE_ENTRY(7, 8, Key_B)
+//      XKEYMAP_SPARSE_ENTRY(2, 3, Key_A),
+//      XKEYMAP_SPARSE_ENTRY(7, 8, Key_B)
 //   )
-//   XKEYMAP_SLOT_MIRRORED(Crackle, Snap /* mirrors Snap */)
-//   XKEYMAP_SLOT_SHIFTED(Pop, Snap /* shifts Snap */, XXX, 2 /* x-offset */, 3 /* y-offset */)
-//   XKEYMAP_SLOT_MIRRORED(Fish, Pop /* mirrors the already shifted Pop */)
-//   XKEYMAP_SLOT_SHIFTED_WRAPPED(Cupid, Snap /* shifts Snap */, 2 /* x-offset */, 3 /* y-offset */)
+//   XKEYMAP_MIRRORED(Crackle, Snap /* mirrors Snap */)
+//   XKEYMAP_SHIFTED(Pop, Snap /* shifts Snap */, XXX, 2 /* x-offset */, 3 /* y-offset */)
+//   XKEYMAP_MIRRORED(Fish, Pop /* mirrors the already shifted Pop */)
+//   XKEYMAP_SHIFTED_WRAPPED(Cupid, Snap /* shifts Snap */, 2 /* x-offset */, 3 /* y-offset */)
+//   XKEYMAP_MASKED(Storm, Pop, my_keymask, ___, /* don't negate */)
 // )
 // 
 // /* When using a keymap tree, layer ids match tree node ids which are both
-//    zero based. Every tree node (layer) references a slot. 
-//    While layer (node) ids are unique, the same slot can be referenced 
+//    zero based. Every tree node (layer) references a keymap. 
+//    While layer (node) ids are unique, the same keymap can be referenced 
 //    by multiple layers (nodes) in the tree. */
 // 
 // /*
@@ -68,27 +87,27 @@
 // 
 // XKEYMAP_TREE(
 //    XKEYMAP_TREE_ROOT(Base),                                               /* node 0 */
-//    XKEYMAP_TREE_NODE(0 /* parent node */, Base    /* referenced slot */), /* node 1 */
-//    XKEYMAP_TREE_NODE(0 /* parent node */, Crackle /* referenced slot */), /* node 2 */
-//    XKEYMAP_TREE_NODE(2 /* parent node */, Pop     /* referenced slot */), /* node 3 */
-//    XKEYMAP_TREE_NODE(2 /* parent node */, Fish    /* referenced slot */), /* node 4 */
-//    XKEYMAP_TREE_NODE(1 /* parent node */, Fish    /* referenced slot */), /* node 5 */
+//    XKEYMAP_TREE_NODE(0 /* parent node */, Base    /* referenced keymap */), /* node 1 */
+//    XKEYMAP_TREE_NODE(0 /* parent node */, Crackle /* referenced keymap */), /* node 2 */
+//    XKEYMAP_TREE_NODE(2 /* parent node */, Pop     /* referenced keymap */), /* node 3 */
+//    XKEYMAP_TREE_NODE(2 /* parent node */, Fish    /* referenced keymap */), /* node 4 */
+//    XKEYMAP_TREE_NODE(1 /* parent node */, Fish    /* referenced keymap */), /* node 5 */
 // )
 //
 // /* Or alternatively ... */
 // 
-// XKEYMAP_STACK /* Interprets layer ids as slot ids, which gives 
+// XKEYMAP_STACK /* Interprets layer ids as keymap ids, which gives 
 //                  an ordinary layer stack. */
 //
 // Important: Use either XKEYMAP_TREE or XKEYMAP_STACK
 
-// The FALLBACK_KEY is returned if a slot cannot be found.
+// The FALLBACK_KEY is returned if a keymap cannot be found.
 //
-#define XKEYMAP_SLOTS(FALLBACK_KEY, ...)                                       \
+#define XKEYMAPS(FALLBACK_KEY, ...)                                            \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
-      Key keyFromSlot(uint8_t slot, uint8_t row, uint8_t col) {         __NL__ \
-         switch(slot) {                                                 __NL__ \
+      Key keyFromKeymap(uint8_t keymap, uint8_t row, uint8_t col) {     __NL__ \
+         switch(keymap) {                                               __NL__ \
             __VA_ARGS__                                                 __NL__ \
          }                                                              __NL__ \
          return FALLBACK_KEY;                                           __NL__ \
@@ -103,8 +122,8 @@
 // Generates a stacked keymap and reuses the KEYMAP_STACKED macro that 
 // is provided by the keyboard hardware.
 //
-#define XKEYMAP_SLOT_STACKED(SLOT, ...)                                 __NL__ \
-            case SLOT:                                                  __NL__ \
+#define XKEYMAP_STACKED(KEYMAP, ...)                                           \
+            case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                static const Key keys[ROWS][COLS] PROGMEM =              __NL__ \
                   KEYMAP_STACKED(__VA_ARGS__);                          __NL__ \
@@ -114,42 +133,42 @@
 
 // Defines a key at a given position in a sparse keymap.
 //
-#define XKEYMAP_SLOT_SPARSE_ENTRY(ROW, COL, KEY)                               \
-   SparseKeymapEntry{ROW*COLS + COL, KEY.raw}
+#define XKEYMAP_SPARSE_ENTRY(ROW, COL, KEY)                                    \
+   SparseKeymapEntry{uint8_t(ROW*COLS + COL), KEY.raw}
    
-// Defines a sparse keymap slot.
+// Defines a sparse keymap.
 //
-#define XKEYMAP_SLOT_SPARSE(SLOT, DEFAULT_KEY, ...)                            \
-            case SLOT:                                                  __NL__ \
+#define XKEYMAP_SPARSE(KEYMAP, DEFAULT_KEY, ...)                               \
+            case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                const static SparseKeymapEntry                           __NL__ \
-                     sparceKeymapEntries[] PROGMEM                      __NL__ \
+                     sparseKeymapEntries[] PROGMEM                      __NL__ \
                = {                                                      __NL__ \
                   __VA_ARGS__                                           __NL__ \
                };                                                       __NL__ \
                                                                         __NL__ \
                constexpr uint8_t entry_count                            __NL__ \
-                  = sizeof(sparceKeymapEntries)                         __NL__ \
-                      / sizeof(*sparceKeymapEntries);                   __NL__ \
+                  = sizeof(sparseKeymapEntries)                         __NL__ \
+                      / sizeof(*sparseKeymapEntries);                   __NL__ \
                                                                         __NL__ \
                Key key = DEFAULT_KEY;                                   __NL__ \
                                                                         __NL__ \
-               keyFromSparceKeymap(row, col, key,                       __NL__ \
-                                   sparceKeymapEntries, entry_count);   __NL__ \
+               keyFromSparseKeymap(row, col, key,                       __NL__ \
+                                   sparseKeymapEntries, entry_count);   __NL__ \
                                                                         __NL__ \
                return key;                                              __NL__ \
             }
             
-// Mirrors a given keymap slot.
+// Mirrors a given keymap.
 //
-#define XKEYMAP_SLOT_MIRRORED(SLOT, SOURCE_SLOT)                               \
-            case SLOT:                                                  __NL__ \
-               return keyFromSlot(SOURCE_SLOT, row, COLS - 1 - col);
+#define XKEYMAP_MIRRORED(KEYMAP, SOURCE_KEYMAP)                                \
+            case KEYMAP:                                                __NL__ \
+               return keyFromKeymap(SOURCE_KEYMAP, row, COLS - 1 - col);
   
-// Shifts a given keymap slot.
+// Shifts a given keymap.
 //
-#define XKEYMAP_SLOT_SHIFTED(SLOT, SOURCE_SLOT, DEFAULT_KEY, ROW_OFFSET, COL_OFFSET) \
-            case SLOT:                                                  __NL__ \
+#define XKEYMAP_SHIFTED(KEYMAP, SOURCE_KEYMAP, DEFAULT_KEY, ROW_OFFSET, COL_OFFSET) \
+            case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                int8_t shifted_row = row + ROW_OFFSET;                   __NL__ \
                int8_t shifted_col = col + COL_OFFSET;                   __NL__ \
@@ -159,25 +178,40 @@
                   return DEFAULT_KEY;                                   __NL__ \
                }                                                        __NL__ \
                                                                         __NL__ \
-               return keyFromSlot(SOURCE_SLOT,                          __NL__ \
+               return keyFromKeymap(SOURCE_KEYMAP,                      __NL__ \
                                  uint8_t(shifted_row),                  __NL__ \
                                  uint8_t(shifted_col));                 __NL__ \
             }
                
-#define XKEYMAP_SLOT_SHIFTED_WRAPPED(SLOT, SOURCE_SLOT, ROW_OFFSET, COL_OFFSET) \
-            case SLOT:                                                  __NL__ \
-               return keyFromSlot(SOURCE_SLOT,                          __NL__ \
+// Shifts a given keymap, thereby wrapping keys around.
+//
+#define XKEYMAP_SHIFTED_WRAPPED(KEYMAP, SOURCE_KEYMAP, ROW_OFFSET, COL_OFFSET) \
+            case KEYMAP:                                                __NL__ \
+               return keyFromKeymap(SOURCE_KEYMAP,                      __NL__ \
                                   (row + ROWS + ROW_OFFSET) % ROWS,     __NL__ \
                                   (col + COLS + COL_OFFSET) % COLS);
-               
+
+// Checks a keymask and only uses the key from the source keymap if the
+// respective bit in the keymask is set or returns the default key otherwise.
+// Setting NEGATE to ! inverts the meaning of the keymask.
+//
+#define XKEYMAP_MASKED(KEYMAP, SOURCE_KEYMAP, KEYMASK, DEFAULT_KEY, NEGATE)    \
+            case KEYMAP:                                                __NL__ \
+            {                                                           __NL__ \
+               if(NEGATE isBitSetPROGMEM(KEYMASK, row*COLS + col)) {    __NL__ \
+                  return keyFromKeymap(SOURCE_KEYMAP, row, col);        __NL__ \
+               }                                                        __NL__ \
+               return DEFAULT_KEY;                                      __NL__ \
+            }
+            
 //******************************************************************************
 // Keymap tree handling macros
 //******************************************************************************
              
-#define XKEYMAP_TREE_NODE(PARENT_LAYER, SLOT)                                  \
-   kaleidoscope::xkeymaps::TreeNode{PARENT_LAYER, SLOT}
+#define XKEYMAP_TREE_NODE(PARENT_LAYER, KEYMAP)                                \
+   kaleidoscope::xkeymaps::TreeNode{PARENT_LAYER, KEYMAP}
    
-#define XKEYMAP_TREE_ROOT(SLOT) XKEYMAP_TREE_NODE(0, SLOT)
+#define XKEYMAP_TREE_ROOT(KEYMAP) XKEYMAP_TREE_NODE(0, KEYMAP)
                
 #define XKEYMAP_TREE(...)                                                      \
    namespace kaleidoscope {                                             __NL__ \
@@ -188,8 +222,8 @@
    };                                                                   __NL__ \
                                                                         __NL__ \
    Key keyFromTreeNodeLayer(uint8_t layer, uint8_t row, uint8_t col) {  __NL__ \
-      uint8_t slot = pgm_read_byte(&(layer_tree[layer].slot_));         __NL__ \
-      return keyFromSlot(slot, row, col);                               __NL__ \
+      uint8_t keymap = pgm_read_byte(&(layer_tree[layer].keymap_));     __NL__ \
+      return keyFromKeymap(keymap, row, col);                           __NL__ \
    }                                                                    __NL__ \
                                                                         __NL__ \
    uint8_t nextLowerLayer(uint8_t layer) {                              __NL__ \
@@ -218,7 +252,7 @@
    class XKeymaps : public kaleidoscope::Plugin {                       __NL__ \
       public:                                                           __NL__ \
          EventHandlerResult onSetup() {                                 __NL__ \
-            Layer.getKey = kaleidoscope::xkeymaps::keyFromSlot;         __NL__ \
+            Layer.getKey = kaleidoscope::xkeymaps::keyFromKeymap;       __NL__ \
             return EventHandlerResult::OK;                              __NL__ \
          }                                                              __NL__ \
    };                                                                   __NL__ \
@@ -232,17 +266,17 @@ namespace xkeymaps {
    
 struct SparseKeymapEntry {
    uint8_t raw_pos_;
-   uint8_t raw_key_;
+   uint16_t raw_key_;
 };
 
-void keyFromSparceKeymap(uint8_t row, uint8_t col,
+void keyFromSparseKeymap(uint8_t row, uint8_t col,
                         Key &key,
-                        const SparseKeymapEntry *sparce_keymap, 
+                        const SparseKeymapEntry *sparse_keymap, 
                         uint8_t entry_count);
 
 struct TreeNode {
    uint8_t parent_layer_;
-   uint8_t slot_;
+   uint8_t keymap_;
 };  
 
 } // end namespace xkeymaps

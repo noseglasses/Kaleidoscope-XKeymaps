@@ -103,10 +103,41 @@
 
 // The FALLBACK_KEY is returned if a keymap cannot be found.
 //
-#define XKEYMAPS(FALLBACK_KEY, ...)                                            \
+#define XKEYMAPS(FALLBACK_KEY, OVERLAY, ...)                                   \
+   /* Add an empty standard keymap to make Kaleidoscope happy */        __NL__ \
+   KEYMAPS()                                                            __NL__ \
+                                                                        __NL__ \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
+      /* Forward declaration necessary to enable referencing already in __NL__ \
+       * definition of overlayKey()                                     __NL__ \
+       */                                                               __NL__ \
+      Key keyFromKeymap(uint8_t keymap, uint8_t row, uint8_t col);      __NL__ \
+      Key overlayKey(uint8_t row, uint8_t col) {                        __NL__ \
+         /* This switch is just necessary as the KEYMAP definition      __NL__ \
+          * macros feature case labels                                  __NL__ \
+          */                                                            __NL__ \
+         switch(255) {                                                  __NL__ \
+            case 255:                                                   __NL__ \
+            {                                                           __NL__ \
+               OVERLAY;                                                 __NL__ \
+            }                                                           __NL__ \
+         }                                                              __NL__ \
+         return Key_Transparent;                                        __NL__ \
+      }                                                                 __NL__ \
+                                                                        __NL__ \
       Key keyFromKeymap(uint8_t keymap, uint8_t row, uint8_t col) {     __NL__ \
+                                                                        __NL__ \
+         /* The overlay keymap has precedence before all other layer    __NL__ \
+          * stuff. If a key is non transparent in the overlay layer,    __NL__ \
+          * it will always be used directly. This makes using layer     __NL__ \
+          * toggle keys foolproof.                                      __NL__ \
+          */                                                            __NL__ \
+         Key o = overlayKey(row, col);                                  __NL__ \
+         if(o != Key_Transparent) {                                     __NL__ \
+            return o;                                                   __NL__ \
+         }                                                              __NL__ \
+                                                                        __NL__ \
          switch(keymap) {                                               __NL__ \
             __VA_ARGS__                                                 __NL__ \
          }                                                              __NL__ \
@@ -138,7 +169,7 @@
    
 // Defines a sparse keymap.
 //
-#define XKEYMAP_SPARSE(KEYMAP, DEFAULT_KEY, ...)                               \
+#define XKEYMAP_SPARSE(KEYMAP, DEFAULT_KEYCODE, ...)                           \
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                const static SparseKeymapEntry                           __NL__ \
@@ -151,7 +182,7 @@
                   = sizeof(sparseKeymapEntries)                         __NL__ \
                       / sizeof(*sparseKeymapEntries);                   __NL__ \
                                                                         __NL__ \
-               Key key = DEFAULT_KEY;                                   __NL__ \
+               Key key = DEFAULT_KEYCODE;                               __NL__ \
                                                                         __NL__ \
                keyFromSparseKeymap(row, col, key,                       __NL__ \
                                    sparseKeymapEntries, entry_count);   __NL__ \
@@ -167,7 +198,7 @@
   
 // Shifts a given keymap.
 //
-#define XKEYMAP_SHIFTED(KEYMAP, SOURCE_KEYMAP, DEFAULT_KEY, ROW_OFFSET, COL_OFFSET) \
+#define XKEYMAP_SHIFTED(KEYMAP, SOURCE_KEYMAP, DEFAULT_KEYCODE, ROW_OFFSET, COL_OFFSET) \
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                int8_t shifted_row = row + ROW_OFFSET;                   __NL__ \
@@ -175,7 +206,7 @@
                                                                         __NL__ \
                if(   shifted_row < 0 || shifted_row >= ROWS             __NL__ \
                   || shifted_col < 0 || shifted_col >= COLS) {          __NL__ \
-                  return DEFAULT_KEY;                                   __NL__ \
+                  return DEFAULT_KEYCODE;                               __NL__ \
                }                                                        __NL__ \
                                                                         __NL__ \
                return keyFromKeymap(SOURCE_KEYMAP,                      __NL__ \
@@ -195,14 +226,24 @@
 // respective bit in the keymask is set or returns the default key otherwise.
 // Setting NEGATE to ! inverts the meaning of the keymask.
 //
-#define XKEYMAP_MASKED(KEYMAP, SOURCE_KEYMAP, KEYMASK, DEFAULT_KEY, NEGATE)    \
+#define XKEYMAP_MASKED(KEYMAP, SOURCE_KEYMAP, KEYMASK, DEFAULT_KEYCODE, NEGATE)\
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                if(NEGATE isBitSetPROGMEM(KEYMASK, row*COLS + col)) {    __NL__ \
                   return keyFromKeymap(SOURCE_KEYMAP, row, col);        __NL__ \
                }                                                        __NL__ \
-               return DEFAULT_KEY;                                      __NL__ \
+               return DEFAULT_KEYCODE;                                  __NL__ \
             }
+            
+// Returns the same keycode for all keys
+//
+#define XKEYMAP_ALL(KEYMAP, KEYCODE)                                            \
+            case KEYMAP:                                                __NL__ \
+               return KEYCODE;
+               
+// Just a tag.
+//
+#define XKEYMAP_OVERLAY(...) __VA_ARGS__
             
 //******************************************************************************
 // Keymap tree handling macros

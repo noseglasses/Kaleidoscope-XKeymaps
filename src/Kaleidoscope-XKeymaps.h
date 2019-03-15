@@ -20,96 +20,39 @@
 #include "kaleidoscope/macro_helpers.h"
 #include "keymask.h"
 
-// Usage example:
-//
-// KEYMASK_STACKED_PROGMEM(my_keymask, 
-//    0, 0, 0, 0, 0, 0, 0,
-//    0, 1, 1, 1, 1, 1, 0,
-//    0, 1, 1, 1, 1, 1,
-//    0, 0, 0, 0, 1, 1, 1,
-//             0, 1, 1, 0,
-//                      0,
-//                      
-//    0, 0, 0, 0, 0, 0, 0, 
-//    0, 1, 1, 1, 1, 1, 0, 
-//       1, 1, 1, 1, 1, 0, 
-//    1, 1, 1, 0, 0, 0, 0,
-//    0, 1, 1, 0,
-//    0
-// );
-//
-// /* We use enum codenames here for keymaps to prevent mixing them 
-//    up with layer ids (tree node ids) */
-// 
-// enum Keymaps { Base, Snap, Crackle, Pop, Fish, Cupid, Storm};
-// 
-// XKEYMAPS(XXX /* The fallback key */,
-//   XKEYMAP_STACKED(Base, 
-//    ___,          Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
-//    Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
-//    Key_PageUp,   Key_A, Key_S, Key_D, Key_F, Key_G,
-//    Key_PageDown, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
-//    Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
-//    ShiftToLayer(FUNCTION),
-// 
-//    M(MACRO_ANY),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
-//    Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
-//                   Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
-//    Key_RightAlt,  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
-//    Key_RightShift, Key_LeftAlt, Key_Spacebar, Key_RightControl,
-//    ShiftToLayer(FUNCTION) 
-//   )
-//   XKEYMAP_SPARSE(Snap, Key_Transparent /* the default key */,
-//      /* Important: Sparse entry must be listed in ascending order of
-//                    row*COLS + col evaluated for their (row/col) pairs. */
-//      XKEYMAP_SPARSE_ENTRY(2, 3, Key_A),
-//      XKEYMAP_SPARSE_ENTRY(7, 8, Key_B)
-//   )
-//   XKEYMAP_MIRRORED(Crackle, Snap /* mirrors Snap */)
-//   XKEYMAP_SHIFTED(Pop, Snap /* shifts Snap */, XXX, 2 /* x-offset */, 3 /* y-offset */)
-//   XKEYMAP_MIRRORED(Fish, Pop /* mirrors the already shifted Pop */)
-//   XKEYMAP_SHIFTED_WRAPPED(Cupid, Snap /* shifts Snap */, 2 /* x-offset */, 3 /* y-offset */)
-//   XKEYMAP_MASKED(Storm, Pop, my_keymask, ___, /* don't negate */)
-// )
-// 
-// /* When using a keymap tree, layer ids match tree node ids which are both
-//    zero based. Every tree node (layer) references a keymap. 
-//    While layer (node) ids are unique, the same keymap can be referenced 
-//    by multiple layers (nodes) in the tree. */
-// 
-// /*
-// 0(Base)---1(Snap)---5(Fish)
-//         |
-//         *-2(Crackle)---3(Pop)
-//                      |
-//                      *-4(Fish)
-// */
-// 
-// XKEYMAP_TREE(
-//    XKEYMAP_TREE_ROOT(Base),                                               /* node 0 */
-//    XKEYMAP_TREE_NODE(0 /* parent node */, Base    /* referenced keymap */), /* node 1 */
-//    XKEYMAP_TREE_NODE(0 /* parent node */, Crackle /* referenced keymap */), /* node 2 */
-//    XKEYMAP_TREE_NODE(2 /* parent node */, Pop     /* referenced keymap */), /* node 3 */
-//    XKEYMAP_TREE_NODE(2 /* parent node */, Fish    /* referenced keymap */), /* node 4 */
-//    XKEYMAP_TREE_NODE(1 /* parent node */, Fish    /* referenced keymap */), /* node 5 */
-// )
-//
-// /* Or alternatively ... */
-// 
-// XKEYMAP_STACK /* Interprets layer ids as keymap ids, which gives 
-//                  an ordinary layer stack. */
-//
-// Important: Use either XKEYMAP_TREE or XKEYMAP_STACK
+// Usage example: See the file example/test/test.ino
+
+#define XKEYMAPS___ONE___(...) 1
 
 // The FALLBACK_KEY is returned if a keymap cannot be found.
 //
-#define XKEYMAPS(FALLBACK_KEY, OVERLAY, ...)                                   \
+#define XKEYMAPS(FALLBACK_KEY, ...)                                            \
                                                                         __NL__ \
    /* Add an empty standard keymap to make Kaleidoscope happy */        __NL__ \
    KEYMAPS()                                                            __NL__ \
                                                                         __NL__ \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
+                                                                        __NL__ \
+      /* This gets the number of keymap definitions by wrapping them    __NL__ \
+       * all with a function macro that evaluates to one. The result    __NL__ \
+       * is a list of ones whose length is counted via casting it       __NL__ \
+       * to an integer array whose lenght can be determined via         __NL__ \
+       * the sizeof operator. All this is done at compile time and      __NL__ \
+       * results in a compile time constant being initialized that      __NL__ \
+       * can later on be used to initialize the global layer_count      __NL__ \
+       * variable.                                                      __NL__ \
+       */                                                               __NL__ \
+      static constexpr uint8_t n_xkeymaps                               __NL__ \
+         = sizeof((int[]) { MAP_LIST(XKEYMAPS___ONE___, __VA_ARGS__) }) __NL__ \
+          /sizeof(int);                                                 __NL__ \
+                                                                        __NL__ \
+      Key keyFromKeymap_(uint8_t keymap, uint8_t row, uint8_t col) {    __NL__ \
+         switch(keymap) {                                               __NL__ \
+            __VA_ARGS__                                                 __NL__ \
+         }                                                              __NL__ \
+         return FALLBACK_KEY;                                           __NL__ \
+      }                                                                 __NL__ \
                                                                         __NL__ \
       Key keyFromKeymap(uint8_t keymap, uint8_t row, uint8_t col) {     __NL__ \
                                                                         __NL__ \
@@ -123,14 +66,10 @@
             return o;                                                   __NL__ \
          }                                                              __NL__ \
                                                                         __NL__ \
-         switch(keymap) {                                               __NL__ \
-            __VA_ARGS__                                                 __NL__ \
-         }                                                              __NL__ \
-         return FALLBACK_KEY;                                           __NL__ \
+         return keyFromKeymap_(keymap, row, col);                       __NL__ \
       }                                                                 __NL__ \
    } /* end namespace xkeymaps */                                       __NL__ \
    } /* end namespace kaleidoscope */
-
 
 #define XKEYMAP_OVERLAY(...)                                                   \
    namespace kaleidoscope {                                             __NL__ \
@@ -171,7 +110,7 @@
 // Defines a key at a given position in a sparse keymap.
 //
 #define XKEYMAP_SPARSE_ENTRY(ROW, COL, KEY)                                    \
-   SparseKeymapEntry{uint8_t(ROW*COLS + COL), KEY.raw}
+   SparseKeymapEntry{uint8_t(ROW*COLS + COL), KEY}
    
 // Defines a sparse keymap.
 //
@@ -200,22 +139,22 @@
 //
 #define XKEYMAP_MIRRORED(KEYMAP, SOURCE_KEYMAP)                                \
             case KEYMAP:                                                __NL__ \
-               return keyFromKeymap(SOURCE_KEYMAP, row, COLS - 1 - col);
+               return keyFromKeymap_(SOURCE_KEYMAP, row, COLS - 1 - col);
   
 // Shifts a given keymap.
 //
 #define XKEYMAP_SHIFTED(KEYMAP, SOURCE_KEYMAP, DEFAULT_KEYCODE, ROW_OFFSET, COL_OFFSET) \
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
-               int8_t shifted_row = row + ROW_OFFSET;                   __NL__ \
-               int8_t shifted_col = col + COL_OFFSET;                   __NL__ \
+               int8_t shifted_row = row - ROW_OFFSET;                   __NL__ \
+               int8_t shifted_col = col - COL_OFFSET;                   __NL__ \
                                                                         __NL__ \
                if(   shifted_row < 0 || shifted_row >= ROWS             __NL__ \
                   || shifted_col < 0 || shifted_col >= COLS) {          __NL__ \
                   return DEFAULT_KEYCODE;                               __NL__ \
                }                                                        __NL__ \
                                                                         __NL__ \
-               return keyFromKeymap(SOURCE_KEYMAP,                      __NL__ \
+               return keyFromKeymap_(SOURCE_KEYMAP,                     __NL__ \
                                  uint8_t(shifted_row),                  __NL__ \
                                  uint8_t(shifted_col));                 __NL__ \
             }
@@ -224,9 +163,9 @@
 //
 #define XKEYMAP_SHIFTED_WRAPPED(KEYMAP, SOURCE_KEYMAP, ROW_OFFSET, COL_OFFSET) \
             case KEYMAP:                                                __NL__ \
-               return keyFromKeymap(SOURCE_KEYMAP,                      __NL__ \
-                                  (row + ROWS + ROW_OFFSET) % ROWS,     __NL__ \
-                                  (col + COLS + COL_OFFSET) % COLS);
+               return keyFromKeymap_(SOURCE_KEYMAP,                     __NL__ \
+                                  (row + ROWS - ROW_OFFSET) % ROWS,     __NL__ \
+                                  (col + COLS - COL_OFFSET) % COLS);
 
 // Checks a keymask and only uses the key from the source keymap if the
 // respective bit in the keymask is set or returns the default key otherwise.
@@ -236,21 +175,27 @@
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                if(NEGATE isBitSetPROGMEM(KEYMASK, row*COLS + col)) {    __NL__ \
-                  return keyFromKeymap(SOURCE_KEYMAP, row, col);        __NL__ \
+                  return keyFromKeymap_(SOURCE_KEYMAP, row, col);       __NL__ \
                }                                                        __NL__ \
                return DEFAULT_KEYCODE;                                  __NL__ \
             }
             
 // Returns the same keycode for all keys
 //
-#define XKEYMAP_ALL(KEYMAP, KEYCODE)                                            \
+#define XKEYMAP_ALL(KEYMAP, KEYCODE)                                           \
             case KEYMAP:                                                __NL__ \
                return KEYCODE;
             
 //******************************************************************************
 // Keymap tree handling macros
 //******************************************************************************
-             
+         
+// This section is commented as it is currently not possible to 
+// implement a proper layer tree with Kaleidoscope's current layer class
+// implementation.
+//
+#if 0
+               
 #define XKEYMAP_TREE_NODE(PARENT_LAYER, KEYMAP)                                \
    kaleidoscope::xkeymaps::TreeNode{PARENT_LAYER, KEYMAP}
    
@@ -284,25 +229,27 @@
    } /* end namespace kaleidoscope */                                   __NL__ \
                                                                         __NL__ \
    kaleidoscope::xkeymaps::XKeymaps XKeymaps;
+#endif
    
 //******************************************************************************
 // Keymap stack handling macros
 //******************************************************************************
    
-#define XKEYMAP_STACK                                                          \
+#define XKEYMAP_LAYER_STACK                                                          \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
    class XKeymaps : public kaleidoscope::Plugin {                       __NL__ \
       public:                                                           __NL__ \
          EventHandlerResult onSetup() {                                 __NL__ \
             Layer.getKey = kaleidoscope::xkeymaps::keyFromKeymap;       __NL__ \
+            layer_count = n_xkeymaps;                                   __NL__ \
             return EventHandlerResult::OK;                              __NL__ \
          }                                                              __NL__ \
    };                                                                   __NL__ \
    } /* end namespace xkeymaps */                                       __NL__ \
    } /* end namespace kaleidoscope */                                   __NL__ \
                                                                         __NL__ \
-   kaleidscope::xkeymaps::XKeymaps XKeymaps;
+   kaleidoscope::xkeymaps::XKeymaps XKeymaps;
        
 namespace kaleidoscope {
 namespace xkeymaps {
@@ -310,8 +257,8 @@ namespace xkeymaps {
 extern Key keyFromOverlay(uint8_t row, uint8_t col);
    
 struct SparseKeymapEntry {
-   uint8_t raw_pos_;
-   uint16_t raw_key_;
+   uint8_t offset_;
+   Key key_;
 };
 
 void keyFromSparseKeymap(uint8_t row, uint8_t col,

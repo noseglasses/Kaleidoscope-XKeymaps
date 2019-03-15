@@ -9,16 +9,14 @@ for Kaleidoscope's traditional keymap definition.
 * shifted (references another keymap)
 * shifted and wrapped (references another keymap)
 * bitmasked keymaps (references another keymap; uses its keys only if corresponding bits in a keymask are non-zero)
+* same key used for all keys
 
-Also, this plugin provides the possibility to 
-define a layer tree instead of the traditional layer stack (that is also still supported for compatibility reasons).
+## Overlay layer
 
-## Terminology
-
-The meaning of the term layer is slightly modified in the context of XKeymaps. A layer is now represented by either a node in the layer tree or by a level
-of the layer stack. Layer ids remain zero based. The actual XKeymaps are defined independently from layers and are referenced via individual identifiers that are also zero based. This makes it possible to share a keymap reference between multiple layers. Thus, the meaning of a keymap depends upon from where in the layer tree it is referenced. 
-
-When using a traditional layer stack, layer ids coincide with XKeymap ids.
+XKeymaps allows to define an additional overlay layer. All 
+non-transparent keys on this layer are preceded by all means. This e.g.
+enables fool-proof definitions of `ShiftToLayer`-keys for whose positions
+otherwise a transparent key is required on all layers.
 
 ## Usage
 
@@ -28,83 +26,88 @@ macros that are available for defining keymaps.
 The following is a minimal example sketch.
 
 ```cpp
-// Define a keymask (a bitfield wherein every bit represents one key) that is
-// stored in PROGMEM. It is used further below for masking of keymaps.
+// Define a keymask (a bitfield wherein each bit represents one key).
+// The whole bitmask is stored in PROGMEM and occupies only eight bytes.
+// It is used further below for masking of keymaps.
 //
 KEYMASK_STACKED_PROGMEM(my_keymask, 
    0, 0, 0, 0, 0, 0, 0,
    0, 1, 1, 1, 1, 1, 0,
    0, 1, 1, 1, 1, 1,
    0, 0, 0, 0, 1, 1, 1,
-            0, 1, 1, 0,
+            0, 0, 0, 0,
                      0,
                      
    0, 0, 0, 0, 0, 0, 0, 
    0, 1, 1, 1, 1, 1, 0, 
       1, 1, 1, 1, 1, 0, 
    1, 1, 1, 0, 0, 0, 0,
-   0, 1, 1, 0,
+   0, 0, 0, 0,
    0
 );
 
-// Use keymap nicknames to avoid confusion with layer ids (tree node ids).
-//
-enum Keymaps { Base, Snap, Crackle, Pop, Fish, Cupid, Storm };
+enum Layers { L0, L1, L2, L3, L4, L5, L6, L7, L8, L9 };
+
+XKEYMAP_OVERLAY(
+   // Layer shifts should always be defined as overlays to make sure that
+   // they are active on all layers.
+   XKEYMAP_SPARSE(254 /* this is ignored for overlay keymaps */, Key_Transparent /* the default key */,
+      XKEYMAP_SPARSE_ENTRY(0, 7, ShiftToLayer(L1)),
+      XKEYMAP_SPARSE_ENTRY(1, 7, ShiftToLayer(L2)),
+      XKEYMAP_SPARSE_ENTRY(2, 7, ShiftToLayer(L3)),
+      XKEYMAP_SPARSE_ENTRY(3, 7, ShiftToLayer(L4)),
+      XKEYMAP_SPARSE_ENTRY(3, 8, ShiftToLayer(L5)),
+      XKEYMAP_SPARSE_ENTRY(2, 8, ShiftToLayer(L6)),
+      XKEYMAP_SPARSE_ENTRY(1, 8, ShiftToLayer(L7)),
+      XKEYMAP_SPARSE_ENTRY(0, 0, Key_R),
+   )  
+)
 
 XKEYMAPS(XXX /* The fallback key */,
-  // Stacked keymaps can be defined analogously to the way
-  // they are traditionally defined in Kaleidoscope.
-  //
-  XKEYMAP_STACKED(Base, 
-     ___,          Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
-     Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
-     Key_PageUp,   Key_A, Key_S, Key_D, Key_F, Key_G,
-     Key_PageDown, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
-     Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
-     ShiftToLayer(FUNCTION),
+  XKEYMAP_STACKED(L0, 
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A,
+     Key_A,
 
-     M(MACRO_ANY),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
-     Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
-                    Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
-     Key_RightAlt,  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
-     Key_RightShift, Key_LeftAlt, Key_Spacebar, Key_RightControl,
-     ShiftToLayer(FUNCTION) 
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+            Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A,
+     Key_A 
+  )  
+  XKEYMAP_SPARSE(L1, Key_Transparent /* the default key */,
+     XKEYMAP_SPARSE_ENTRY(1, 0, Key_C),
+     XKEYMAP_SPARSE_ENTRY(2, 1, Key_C)
   )
-  XKEYMAP_SPARSE(Snap, Key_Transparent /* the default key */,
-     /* Important: Sparse entry must be listed in ascending order of
-                   the result of row*COLS + col. */
-     XKEYMAP_SPARSE_ENTRY(2, 3, Key_A),
-     XKEYMAP_SPARSE_ENTRY(7, 8, Key_B)
-  )
-  XKEYMAP_MIRRORED(Crackle, Snap /* mirrors Snap */)
-  XKEYMAP_SHIFTED(Pop, Snap /* shifts Snap */, XXX, 2 /* row-offset */, 3 /* col-offset */)
-  XKEYMAP_MIRRORED(Fish, Pop /* mirrors the already shifted Pop */)
-  XKEYMAP_SHIFTED_WRAPPED(Cupid, Snap /* shifts Snap */, 2 /* row-offset */, 3 /* col-offset */)
-  XKEYMAP_MASKED(Storm, Pop, my_keymask, Key_Transparent /* the default key */, /* empty = don't negate */)
+  XKEYMAP_MIRRORED(L2, L1 /* mirrors L1 */)
+  XKEYMAP_SHIFTED(L3, L1 /* shifts L1 */, XXX, 1 /* x-offset */, 1 /* y-offset */)
+  XKEYMAP_MIRRORED(L4, L3 /* mirrors the already shifted L3 */)
+  XKEYMAP_SHIFTED_WRAPPED(L5, L1 /* shifts L1 */, 0 /* x-offset */, -1 /* y-offset */)
+  XKEYMAP_ALL(L6, Key_B)
+  XKEYMAP_MASKED(L7, L9, my_keymask, ___, /* don't negate */)
+  XKEYMAP_MASKED(L8, L9, my_keymask, ___, ! /* negate */)
+  XKEYMAP_ALL(L9, Key_M)
 )
 
-// When using a layer tree, layers are tree nodes which are each bound
-// to a keymap. Keymaps can thereby be shared among nodes.
+// Generate a layer stack that mimics the behavior of Kaleidoscope's
+// default layer stack. We require it to be defined explicitly to
+// be able to provide alternative layer handling strategies in 
+// future versions of this plugin.
 //
-// 0(Base)---1(Snap)---5(Fish)
-//         |
-//         *-2(Crackle)---3(Pop)
-//                      |
-//                      *-4(Fish)
-//
-XKEYMAP_TREE(
-   XKEYMAP_TREE_ROOT(Base),                                               /* node 0 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Base    /* referenced slot */), /* node 1 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Crackle /* referenced slot */), /* node 2 */
-   XKEYMAP_TREE_NODE(2 /* parent node */, Pop     /* referenced slot */), /* node 3 */
-   XKEYMAP_TREE_NODE(2 /* parent node */, Fish    /* referenced slot */), /* node 4 */
-   XKEYMAP_TREE_NODE(1 /* parent node */, Fish    /* referenced slot */), /* node 5 */
-)
+XKEYMAP_LAYER_STACK
 
-// We could also use a traditional layer stack by replacing the above definition
-// of XKEYMAP_TREE(...) by XKEYMAP_STACK
+KALEIDOSCOPE_INIT_PLUGINS(XKeymaps);
 
-...
+void setup() {  
+   Kaleidoscope.setup();
+}
 
-KALEIDOSCOPE_INIT_PLUGINS(XKeymaps)
+void loop() {
+  Kaleidoscope.loop();
+}
+
 ```

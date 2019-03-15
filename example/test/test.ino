@@ -21,12 +21,6 @@
 #include "Kaleidoscope.h"
 
 #include "Kaleidoscope-XKeymaps.h"
-
-enum { PRIMARY, NUMPAD, FUNCTION }; // layers
-
-enum { MACRO_VERSION_INFO,
-       MACRO_ANY
-     };
      
 KEYMASK_STACKED_PROGMEM(my_keymask, 
    0, 0, 0, 0, 0, 0, 0,
@@ -44,17 +38,12 @@ KEYMASK_STACKED_PROGMEM(my_keymask,
    0
 );
 
-enum Layers { L0, L1, L2, L3, L4, L5, L6, L7, L8 };
-
-/* We use enum codenames here for slots to prevent mixing them 
-   up with layer ids (tree node ids) */
-
-enum Slots { Base, Snap, Crackle, Pop, Fish, Cupid, Storm, Lightning };
+enum Layers { L0, L1, L2, L3, L4, L5, L6, L7, L8, L9 };
 
 XKEYMAP_OVERLAY(
    // Layer shifts should always be defined as overlays to make sure that
    // they are active on all layers.
-   XKEYMAP_SPARSE(-1 /* this is ignored for overlay keymaps */, Key_Transparent /* the default key */,
+   XKEYMAP_SPARSE(254 /* this is ignored for overlay keymaps */, Key_Transparent /* the default key */,
       XKEYMAP_SPARSE_ENTRY(0, 7, ShiftToLayer(L1)),
       XKEYMAP_SPARSE_ENTRY(1, 7, ShiftToLayer(L2)),
       XKEYMAP_SPARSE_ENTRY(2, 7, ShiftToLayer(L3)),
@@ -62,13 +51,12 @@ XKEYMAP_OVERLAY(
       XKEYMAP_SPARSE_ENTRY(3, 8, ShiftToLayer(L5)),
       XKEYMAP_SPARSE_ENTRY(2, 8, ShiftToLayer(L6)),
       XKEYMAP_SPARSE_ENTRY(1, 8, ShiftToLayer(L7)),
-      XKEYMAP_SPARSE_ENTRY(0, 8, ShiftToLayer(L8)),
-      XKEYMAP_SPARSE_ENTRY(0, 0, Key_0),
+      XKEYMAP_SPARSE_ENTRY(0, 0, Key_R),
    )  
 )
 
 XKEYMAPS(XXX /* The fallback key */,
-  XKEYMAP_STACKED(Base, 
+  XKEYMAP_STACKED(L0, 
      Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
      Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
      Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
@@ -83,53 +71,26 @@ XKEYMAPS(XXX /* The fallback key */,
      Key_A, Key_A, Key_A, Key_A,
      Key_A 
   )  
-  XKEYMAP_SPARSE(Snap, Key_Transparent /* the default key */,
-     /* Important: Sparse entry must be listed in ascending order of
-                   row*COLS + col evaluated for their (row/col) pairs. */
+  XKEYMAP_SPARSE(L1, Key_Transparent /* the default key */,
      XKEYMAP_SPARSE_ENTRY(1, 0, Key_C),
      XKEYMAP_SPARSE_ENTRY(2, 1, Key_C)
   )
-  XKEYMAP_MIRRORED(Crackle, Snap /* mirrors Snap */)
-  XKEYMAP_SHIFTED(Pop, Snap /* shifts Snap */, XXX, 2 /* x-offset */, 3 /* y-offset */)
-  XKEYMAP_MIRRORED(Fish, Pop /* mirrors the already shifted Pop */)
-  XKEYMAP_SHIFTED_WRAPPED(Cupid, Snap /* shifts Snap */, -1 /* x-offset */, 0 /* y-offset */)
-  XKEYMAP_ALL(Storm, Key_B)
-  XKEYMAP_MASKED(Lightning, Snap, my_keymask, ___, /* don't negate */)
+  XKEYMAP_MIRRORED(L2, L1 /* mirrors L1 */)
+  XKEYMAP_SHIFTED(L3, L1 /* shifts L1 */, XXX, 1 /* x-offset */, 1 /* y-offset */)
+  XKEYMAP_MIRRORED(L4, L3 /* mirrors the already shifted L3 */)
+  XKEYMAP_SHIFTED_WRAPPED(L5, L1 /* shifts L1 */, 0 /* x-offset */, -1 /* y-offset */)
+  XKEYMAP_ALL(L6, Key_B)
+  XKEYMAP_MASKED(L7, L9, my_keymask, ___, /* don't negate */)
+  XKEYMAP_MASKED(L8, L9, my_keymask, ___, ! /* negate */)
+  XKEYMAP_ALL(L9, Key_M)
 )
 
-/* When using a keymap tree, layer ids match tree node ids which are both
-   zero based. Every tree node (layer) references a slot. 
-   While layer (node) ids are unique, the same slot can be referenced 
-   by multiple layers (nodes) in the tree. */
-
-/*
-L0(Base)---L1(Snap)
-         |
-         *-L2(Crackle)
-         |
-         *-L3(Pop)
-         |
-         *-L4(Fish)
-         |
-         *-L5(Cupid)
-         |
-         *-L6(Storm)---L7(Lightning)
-*/
-
-XKEYMAP_TREE(
-   XKEYMAP_TREE_ROOT(Base),                                                 /* node L0 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Snap      /* referenced slot */), /* node L1 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Crackle   /* referenced slot */), /* node L2 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Pop       /* referenced slot */), /* node L3 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Fish      /* referenced slot */), /* node L4 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Cupid     /* referenced slot */), /* node L5 */
-   XKEYMAP_TREE_NODE(0 /* parent node */, Storm     /* referenced slot */), /* node L6 */
-   XKEYMAP_TREE_NODE(Storm /* parent node */, Lightning /* referenced slot */), /* node L7 */
-)
+XKEYMAP_LAYER_STACK
 
 KALEIDOSCOPE_INIT_PLUGINS(XKeymaps);
 
-void setup() {
+void setup() {  
+   Kaleidoscope.setup();
 }
 
 void loop() {

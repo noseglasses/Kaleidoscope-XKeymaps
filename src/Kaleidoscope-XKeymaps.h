@@ -104,27 +104,12 @@
 // The FALLBACK_KEY is returned if a keymap cannot be found.
 //
 #define XKEYMAPS(FALLBACK_KEY, OVERLAY, ...)                                   \
+                                                                        __NL__ \
    /* Add an empty standard keymap to make Kaleidoscope happy */        __NL__ \
    KEYMAPS()                                                            __NL__ \
                                                                         __NL__ \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
-      /* Forward declaration necessary to enable referencing already in __NL__ \
-       * definition of overlayKey()                                     __NL__ \
-       */                                                               __NL__ \
-      Key keyFromKeymap(uint8_t keymap, uint8_t row, uint8_t col);      __NL__ \
-      Key overlayKey(uint8_t row, uint8_t col) {                        __NL__ \
-         /* This switch is just necessary as the KEYMAP definition      __NL__ \
-          * macros feature case labels                                  __NL__ \
-          */                                                            __NL__ \
-         switch(255) {                                                  __NL__ \
-            case 255:                                                   __NL__ \
-            {                                                           __NL__ \
-               OVERLAY;                                                 __NL__ \
-            }                                                           __NL__ \
-         }                                                              __NL__ \
-         return Key_Transparent;                                        __NL__ \
-      }                                                                 __NL__ \
                                                                         __NL__ \
       Key keyFromKeymap(uint8_t keymap, uint8_t row, uint8_t col) {     __NL__ \
                                                                         __NL__ \
@@ -133,7 +118,7 @@
           * it will always be used directly. This makes using layer     __NL__ \
           * toggle keys foolproof.                                      __NL__ \
           */                                                            __NL__ \
-         Key o = overlayKey(row, col);                                  __NL__ \
+         Key o = keyFromOverlay(row, col);                              __NL__ \
          if(o != Key_Transparent) {                                     __NL__ \
             return o;                                                   __NL__ \
          }                                                              __NL__ \
@@ -145,7 +130,28 @@
       }                                                                 __NL__ \
    } /* end namespace xkeymaps */                                       __NL__ \
    } /* end namespace kaleidoscope */
-   
+
+
+#define XKEYMAP_OVERLAY(...)                                                   \
+   namespace kaleidoscope {                                             __NL__ \
+   namespace xkeymaps {                                                 __NL__ \
+                                                                        __NL__ \
+      Key keyFromOverlay(uint8_t row, uint8_t col) {                    __NL__ \
+         /* This switch is just necessary as the KEYMAP definition      __NL__ \
+          * macros feature case labels. By usign 255 here and           __NL__ \
+          * relying on C++'s switch case fallthrough in the absence     __NL__ \
+          * of a break statement, we can be sure that the overlay       __NL__ \
+          * case is always executed.                                    __NL__ \
+          */                                                            __NL__ \
+         switch(255) {                                                  __NL__ \
+            case 255:                                                   __NL__ \
+            __VA_ARGS__                                                 __NL__ \
+         }                                                              __NL__ \
+         return Key_Transparent;                                        __NL__ \
+      }                                                                 __NL__ \
+   } /* end namespace xkeymaps */                                       __NL__ \
+   } /* end namespace kaleidoscope */
+      
 //******************************************************************************
 // Macros to define keymaps
 //******************************************************************************
@@ -240,10 +246,6 @@
 #define XKEYMAP_ALL(KEYMAP, KEYCODE)                                            \
             case KEYMAP:                                                __NL__ \
                return KEYCODE;
-               
-// Just a tag.
-//
-#define XKEYMAP_OVERLAY(...) __VA_ARGS__
             
 //******************************************************************************
 // Keymap tree handling macros
@@ -304,6 +306,8 @@
        
 namespace kaleidoscope {
 namespace xkeymaps {
+   
+extern Key keyFromOverlay(uint8_t row, uint8_t col);
    
 struct SparseKeymapEntry {
    uint8_t raw_pos_;

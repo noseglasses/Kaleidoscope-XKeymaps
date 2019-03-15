@@ -51,35 +51,37 @@ enum Layers { L0, L1, L2, L3, L4, L5, L6, L7, L8 };
 
 enum Slots { Base, Snap, Crackle, Pop, Fish, Cupid, Storm, Lightning };
 
-XKEYMAPS(XXX /* The fallback key */,
-   XKEYMAP_OVERLAY(
-      // Layer shifts should always be defined as overlays
-      XKEYMAP_SPARSE(-1 /* this is ignored for overlay keymaps */, Key_Transparent /* the default key */,
-         XKEYMAP_SPARSE_ENTRY(0, 7, ShiftToLayer(L1)),
-         XKEYMAP_SPARSE_ENTRY(1, 7, ShiftToLayer(L2)),
-         XKEYMAP_SPARSE_ENTRY(2, 7, ShiftToLayer(L3)),
-         XKEYMAP_SPARSE_ENTRY(3, 7, ShiftToLayer(L4)),
-         XKEYMAP_SPARSE_ENTRY(3, 8, ShiftToLayer(L5)),
-         XKEYMAP_SPARSE_ENTRY(2, 8, ShiftToLayer(L6)),
-         XKEYMAP_SPARSE_ENTRY(1, 8, ShiftToLayer(L7)),
-         XKEYMAP_SPARSE_ENTRY(0, 8, ShiftToLayer(L8)),
-         XKEYMAP_SPARSE_ENTRY(0, 0, Key_0),
-      )     
-   )
-  XKEYMAP_STACKED(Base, 
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A,
-   Key_A,
+XKEYMAP_OVERLAY(
+   // Layer shifts should always be defined as overlays to make sure that
+   // they are active on all layers.
+   XKEYMAP_SPARSE(-1 /* this is ignored for overlay keymaps */, Key_Transparent /* the default key */,
+      XKEYMAP_SPARSE_ENTRY(0, 7, ShiftToLayer(L1)),
+      XKEYMAP_SPARSE_ENTRY(1, 7, ShiftToLayer(L2)),
+      XKEYMAP_SPARSE_ENTRY(2, 7, ShiftToLayer(L3)),
+      XKEYMAP_SPARSE_ENTRY(3, 7, ShiftToLayer(L4)),
+      XKEYMAP_SPARSE_ENTRY(3, 8, ShiftToLayer(L5)),
+      XKEYMAP_SPARSE_ENTRY(2, 8, ShiftToLayer(L6)),
+      XKEYMAP_SPARSE_ENTRY(1, 8, ShiftToLayer(L7)),
+      XKEYMAP_SPARSE_ENTRY(0, 8, ShiftToLayer(L8)),
+      XKEYMAP_SPARSE_ENTRY(0, 0, Key_0),
+   )  
+)
 
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-          Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
-   Key_A, Key_A, Key_A, Key_A,
-   Key_A 
+XKEYMAPS(XXX /* The fallback key */,
+  XKEYMAP_STACKED(Base, 
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A,
+     Key_A,
+
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+            Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A, Key_A, Key_A, Key_A,
+     Key_A, Key_A, Key_A, Key_A,
+     Key_A 
   )  
   XKEYMAP_SPARSE(Snap, Key_Transparent /* the default key */,
      /* Important: Sparse entry must be listed in ascending order of

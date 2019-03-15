@@ -14,10 +14,17 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Kaleidoscope.h"
 #include "Kaleidoscope-XKeymaps.h"
 
 namespace kaleidoscope {
 namespace xkeymaps {
+   
+__attribute__((weak))
+extern Key keyFromOverlay(uint8_t row, uint8_t col)
+{
+   return Key_Transparent;
+}
 
 void keyFromSparseKeymap(uint8_t row, uint8_t col,
                         Key &key,

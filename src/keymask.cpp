@@ -21,14 +21,14 @@
 namespace kaleidoscope {
 namespace bitfields {
    
-bool isBitSetP(const void *bit_field, uint8_t raw_pos) {
+bool BaseBitfield::isBitSetP(const void *bit_field, uint8_t raw_pos) {
    uint8_t byte_id = raw_pos >> 3;
    uint8_t bit_pos = raw_pos & 0x7;
    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(bit_field);
    return bytes[byte_id] & (0x1 << bit_pos);
 }
 
-void setBitP(void *bit_field, uint8_t raw_pos, uint8_t val) {
+void BaseBitfield::setBitP(void *bit_field, uint8_t raw_pos, uint8_t val) {
    uint8_t byte_id = raw_pos >> 3;
    uint8_t bit_pos = raw_pos & 0x7;
    uint8_t *bytes = reinterpret_cast<uint8_t *>(bit_field);
@@ -40,7 +40,7 @@ void setBitP(void *bit_field, uint8_t raw_pos, uint8_t val) {
    }
 }
    
-bool isBitSetPROGMEM_P(const void *bit_field, uint8_t raw_pos) {
+bool BaseBitfield::isBitSetPROGMEM_P(const void *bit_field, uint8_t raw_pos) {
    uint8_t byte_id = raw_pos >> 3;
    uint8_t bit_pos = raw_pos & 0x7;
    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(bit_field);

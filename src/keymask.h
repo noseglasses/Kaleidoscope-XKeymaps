@@ -23,13 +23,6 @@
 namespace kaleidoscope {
 namespace bitfields {
 
-// Compute the number of bytes that are necessary to store
-// n_bits bits
-//
-constexpr uint8_t nBytesForBits(uint8_t n_bits) {
-   return (n_bits % 8) ? n_bits/8 + 1 : n_bits/8;
-}
-
 // To store the bitfield we use a recursively defined template struct.
 // It contains one byte of storage and a nested template struct
 // that wraps the remaining bytes.
@@ -39,17 +32,17 @@ constexpr uint8_t nBytesForBits(uint8_t n_bits) {
 // by using the __attribute__((packed)) directive.
 
 template<uint8_t Byte_Count__>
-struct Bitfield {
+struct Bitfield_ {
    
    uint8_t byte_;
    
-   Bitfield<Byte_Count__ - 1> more_bytes_;
+   Bitfield_<Byte_Count__ - 1> more_bytes_;
    
    // A constructor to initialize this class and to pass the remaining
    // bits on to the nested more_bytes_ struct
    //
    template<typename ... Bits__>
-   constexpr Bitfield(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, 
+   constexpr Bitfield_(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, 
                       uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, 
                       Bits__ ... bits) 
       :  byte_( b0 << 0
@@ -69,11 +62,11 @@ struct Bitfield {
 // are unused are autommatically zeroed.
 //
 template<>
-struct Bitfield<1> {   
+struct Bitfield_<1> {   
    
    uint8_t byte_;
    
-   constexpr Bitfield(uint8_t b0 = 0, uint8_t b1 = 0, uint8_t b2 = 0, uint8_t b3 = 0, 
+   constexpr Bitfield_(uint8_t b0 = 0, uint8_t b1 = 0, uint8_t b2 = 0, uint8_t b3 = 0, 
                       uint8_t b4 = 0, uint8_t b5 = 0, uint8_t b6 = 0, uint8_t b7 = 0) 
       :  byte_( b0 << 0
             |   b1 << 1
@@ -86,48 +79,99 @@ struct Bitfield<1> {
    {}
 } __attribute__((packed));
 
-// Defines a bitfield named VAR_NAME. Applies MODIFIER (could e.g. set to PROGMEM).
+class BaseBitfield {
+   
+   protected:
+      
+      static bool isBitSetP(const void *bit_field, uint8_t raw_pos);
+      static void setBitP(void *bit_field, uint8_t raw_pos, uint8_t val);
+      static bool isBitSetPROGMEM_P(const void *bit_field, uint8_t raw_pos);
+};
+
+template<size_t BitCount__>
+class Bitfield : public BaseBitfield {
+   
+   public:
+
+      static constexpr size_t nBytesForBits(size_t n_bits) {
+        return (n_bits % 8) ? n_bits/8 + 1 : n_bits/8;
+      }
+      
+      static constexpr size_t n_bits_ = BitCount__;
+      static constexpr size_t n_bytes_ = nBytesForBits(BitCount__);
+         
+      template<typename ... Bits__>
+      constexpr Bitfield(Bits__...bits) : bits_(bits...) {
+          static_assert(sizeof...(Bits__) == n_bits_, "Invalid number of bits supplied to constructor");
+      }
+
+      bool isBitSet(uint8_t raw_pos) const {
+         return isBitSetP(&bits_, raw_pos);
+      }
+
+      bool isBitSetPROGMEM(uint8_t raw_pos) const {
+         return isBitSetPROGMEM_P(&bits_, raw_pos);
+      }
+
+      void setBit(uint8_t raw_pos, uint8_t val) {
+         setBitP(&bits_, raw_pos, val);
+      }
+      
+      // An operator to query bits. Only applicable if 
+      // bitfield is not stored in PROGMEM.
+      //
+      constexpr bool operator[](uint8_t raw_pos) const {
+         return this->isBitSet(raw_pos);
+      }
+      
+   private:
+      
+      Bitfield_<n_bytes_> bits_;
+};
+
+// This method could be used to create bitfields like.
+//
+// Note: Due to a restriction in all gcc versions < 6.0
+//       this function cannot be called with the output of KEYMAP_STACKED(...)
+//       or KEYMAP(...) as argument
+//
+// auto my_bitfield = generateBitfield(1, 2, 3);
+//
+template<typename...Bits__>
+constexpr Bitfield<sizeof...(Bits__)> generateBitfield(Bits__...bits) {
+   return Bitfield<sizeof...(Bits__)>(bits...);
+}
+
+template<typename...Args__>
+constexpr size_t getNArgs(Args__...) { return sizeof...(Args__); }
+
+// Defines a bitfield named VAR_NAME. Applies MODIFIER (could e.g. set to const PROGMEM).
 //
 #define BITFIELD__(VAR_NAME, MODIFIER, ...)                                    \
-    /* Generate an auxiliary array that stores the bit information.     __NL__ \
-     * It is only used to determine the number of bits that are passed  __NL__ \
-     * to macro BITFIELD.                                               __NL__ \
-     */                                                                 __NL__ \
-    static constexpr uint8_t bits_in_##VAR_NAME[] = {__VA_ARGS__};      __NL__ \
-    static constexpr uint8_t n_bits_in_##VAR_NAME                       __NL__ \
-       = sizeof(bits_in_##VAR_NAME) / sizeof(*bits_in_##VAR_NAME);      __NL__ \
+    constexpr size_t VAR_NAME##_n_bits                                  __NL__ \
+         = kaleidoscope::bitfields::getNArgs(__VA_ARGS__);              __NL__ \
                                                                         __NL__ \
-    MODIFIER kaleidoscope::bitfields::Bitfield<                         __NL__ \
-       kaleidoscope::bitfields::nBytesForBits(n_bits_in_##VAR_NAME)     __NL__ \
-    > VAR_NAME(__VA_ARGS__);
+    MODIFIER kaleidoscope::bitfields::Bitfield<VAR_NAME##_n_bits>       __NL__ \
+         VAR_NAME{__VA_ARGS__};
     
 #define BITFIELD(VAR_NAME, ...) BITFIELD__(VAR_NAME,, __VA_ARGS__)   
 #define BITFIELD_PROGMEM(VAR_NAME, ...) BITFIELD__(VAR_NAME, const PROGMEM, __VA_ARGS__)           
     
+#ifdef KEYMAP_LIST
+#define KEYMASK(VAR_NAME, ...) \
+    BITFIELD(VAR_NAME, KEYMAP_LIST(0 /*default for non-existent keys*/, __VA_ARGS__))
+    
+#define KEYMASK_PROGMEM(VAR_NAME, ...) \
+    BITFIELD_PROGMEM(VAR_NAME, KEYMAP_LIST(0 /*default for non-existent keys*/, __VA_ARGS__))
+#endif
+    
+#ifdef KEYMAP_STACKED_LIST
 #define KEYMASK_STACKED(VAR_NAME, ...) \
     BITFIELD(VAR_NAME, KEYMAP_STACKED_LIST(0 /*default for non-existent keys*/, __VA_ARGS__))
     
 #define KEYMASK_STACKED_PROGMEM(VAR_NAME, ...) \
     BITFIELD_PROGMEM(VAR_NAME, KEYMAP_STACKED_LIST(0 /*default for non-existent keys*/, __VA_ARGS__))
-    
-bool isBitSetP(const void *bit_field, uint8_t raw_pos);
-template<typename Bitfield__>
-bool isBitSet(const Bitfield__ &bit_field, uint8_t raw_pos) {
-   return isBitSetP(&bit_field, raw_pos);
-}
-
-void setBitP(void *bit_field, uint8_t raw_pos, uint8_t val);
-template<typename Bitfield__>
-void setBit(Bitfield__ &bit_field, uint8_t raw_pos, uint8_t val) {
-   setBitP(&bit_field, raw_pos, val);
-}
-
-bool isBitSetPROGMEM_P(const void *bit_field, uint8_t raw_pos);
-template<typename Bitfield__>
-bool isBitSetPROGMEM(const Bitfield__ &bit_field, uint8_t raw_pos) {
-   return isBitSetPROGMEM_P(&bit_field, raw_pos);
-}
-
+#endif
 
 } // end namespace bitfields
 } // end namespace kaleidoscope

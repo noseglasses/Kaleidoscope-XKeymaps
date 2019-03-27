@@ -174,7 +174,7 @@
 #define XKEYMAP_MASKED(KEYMAP, SOURCE_KEYMAP, KEYMASK, DEFAULT_KEYCODE, NEGATE)\
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
-               if(NEGATE isBitSetPROGMEM(KEYMASK, row*COLS + col)) {    __NL__ \
+               if(NEGATE KEYMASK.isBitSetPROGMEM(row*COLS + col)) {    __NL__ \
                   return keyFromKeymap_(SOURCE_KEYMAP, row, col);       __NL__ \
                }                                                        __NL__ \
                return DEFAULT_KEYCODE;                                  __NL__ \

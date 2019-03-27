@@ -21,7 +21,7 @@
 #include "Kaleidoscope.h"
 
 #include "Kaleidoscope-XKeymaps.h"
-     
+
 KEYMASK_STACKED_PROGMEM(my_keymask, 
    0, 0, 0, 0, 0, 0, 0,
    0, 1, 1, 1, 1, 1, 0,

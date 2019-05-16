@@ -22,7 +22,7 @@
 
 #include "Kaleidoscope-XKeymaps.h"
 
-KEYMASK_STACKED_PROGMEM(my_keymask, 
+KEYMAP_BITFIELD_STACKED_PROGMEM(my_keymask, 
    0, 0, 0, 0, 0, 0, 0,
    0, 1, 1, 1, 1, 1, 0,
    0, 1, 1, 1, 1, 1,

@@ -30,7 +30,7 @@ The following is a minimal example sketch.
 // The whole bitmask is stored in PROGMEM and occupies only eight bytes.
 // It is used further below for masking of keymaps.
 //
-KEYMASK_STACKED_PROGMEM(my_keymask, 
+KEYMAP_BITFIELD_STACKED_PROGMEM(my_keymask, 
    0, 0, 0, 0, 0, 0, 0,
    0, 1, 1, 1, 1, 1, 0,
    0, 1, 1, 1, 1, 1,

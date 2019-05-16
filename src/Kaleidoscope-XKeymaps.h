@@ -18,7 +18,7 @@
 
 #include "Kaleidoscope.h"
 #include "kaleidoscope/macro_helpers.h"
-#include "keymask.h"
+#include "kaleidoscope/bitfields.h"
 
 // Usage example: See the file example/test/test.ino
 
@@ -101,10 +101,10 @@
 #define XKEYMAP_STACKED(KEYMAP, ...)                                           \
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
-               static const Key keys[ROWS][COLS] PROGMEM =              __NL__ \
+               static const Key keys[ROWS*COLS] PROGMEM =               __NL__ \
                   KEYMAP_STACKED(__VA_ARGS__);                          __NL__ \
                                                                         __NL__ \
-               return Key{pgm_read_word(&(keys[row][col]))};            __NL__ \
+               return Key{pgm_read_word(&(keys[row*COLS + col]))};      __NL__ \
             }
 
 // Defines a key at a given position in a sparse keymap.

@@ -20,11 +20,11 @@
 namespace kaleidoscope {
 namespace xkeymaps {
    
-__attribute__((weak))
-extern Key keyFromOverlay(uint8_t row, uint8_t col)
-{
-   return Key_Transparent;
-}
+// __attribute__((weak))
+// extern Key keyFromOverlay(uint8_t row, uint8_t col)
+// {
+//    return Key_Transparent;
+// }
 
 // A binary search that could be efficient when a greater number of 
 // sparse entries are defined. It comes with the disadvantage 
@@ -72,21 +72,21 @@ extern Key keyFromOverlay(uint8_t row, uint8_t col)
 // has the great advantage that keys do not need to be defined in
 // ascending order of row*COLS + col.
 //
-void keyFromSparseKeymap(uint8_t row, uint8_t col,
-                        Key &key,
-                        const SparseKeymapEntry *sparse_keymap, 
-                        uint8_t entry_count)
-{
-   uint8_t test_offset = row*COLS + col;
-   
-   for(uint8_t i = 0; i < entry_count; ++i) {
-      uint8_t offset = pgm_read_byte(&(sparse_keymap[i].offset_));
-      if(test_offset == offset) {
-         key = Key{pgm_read_word(&(sparse_keymap[i].key_))};
-         return;
-      }
-   }
-}
+// void keyFromSparseKeymap(uint8_t row, uint8_t col,
+//                         Key &key,
+//                         const SparseKeymapEntry *sparse_keymap, 
+//                         uint8_t entry_count)
+// {
+//    uint8_t test_offset = row*COLS + col;
+//    
+//    for(uint8_t i = 0; i < entry_count; ++i) {
+//       uint8_t offset = pgm_read_byte(&(sparse_keymap[i].offset_));
+//       if(test_offset == offset) {
+//          key = Key{pgm_read_word(&(sparse_keymap[i].key_))};
+//          return;
+//       }
+//    }
+// }
 
 
 } // end namespace kaleidoscope

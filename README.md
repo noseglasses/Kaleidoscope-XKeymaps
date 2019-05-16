@@ -26,6 +26,9 @@ macros that are available for defining keymaps.
 The following is a minimal example sketch.
 
 ```cpp
+#include "Kaleidoscope.h"
+#include "Kaleidoscope-XKeymaps.h"
+
 // Define a keymask (a bitfield wherein each bit represents one key).
 // The whole bitmask is stored in PROGMEM and occupies only eight bytes.
 // It is used further below for masking of keymaps.
@@ -52,7 +55,7 @@ XKEYMAP_OVERLAY(
    // Layer shifts should always be defined as overlays to make sure that
    // they are active on all layers.
    XKEYMAP_SPARSE(254 /* this is ignored for overlay keymaps */, Key_Transparent /* the default key */,
-      XKEYMAP_SPARSE_ENTRY(0, 7, ShiftToLayer(L1)),
+      XKEYMAP_SPARSE_ENTRY(0, 7, ShiftToLayer(L1)), // row = 0, col = 7
       XKEYMAP_SPARSE_ENTRY(1, 7, ShiftToLayer(L2)),
       XKEYMAP_SPARSE_ENTRY(2, 7, ShiftToLayer(L3)),
       XKEYMAP_SPARSE_ENTRY(3, 7, ShiftToLayer(L4)),
@@ -80,17 +83,17 @@ XKEYMAPS(XXX /* The fallback key */,
      Key_A 
   )  
   XKEYMAP_SPARSE(L1, Key_Transparent /* the default key */,
-     XKEYMAP_SPARSE_ENTRY(1, 0, Key_C),
+     XKEYMAP_SPARSE_ENTRY(1, 0, Key_C), // row = 1, col = 0
      XKEYMAP_SPARSE_ENTRY(2, 1, Key_C)
   )
   XKEYMAP_MIRRORED(L2, L1 /* mirrors L1 */)
-  XKEYMAP_SHIFTED(L3, L1 /* shifts L1 */, XXX, 1 /* x-offset */, 1 /* y-offset */)
+  XKEYMAP_SHIFTED(L3, L1 /* shifts L1 */, XXX, 1 /* row-offset */, 1 /* col-offset */)
   XKEYMAP_MIRRORED(L4, L3 /* mirrors the already shifted L3 */)
-  XKEYMAP_SHIFTED_WRAPPED(L5, L1 /* shifts L1 */, 0 /* x-offset */, -1 /* y-offset */)
+  XKEYMAP_SHIFTED_WRAPPED(L5, L1 /* shifts L1 */, 0 /* row-offset */, -1 /* col-offset */)
   XKEYMAP_ALL(L6, Key_B)
   XKEYMAP_MASKED(L7, L9, my_keymask, ___, /* don't negate */)
   XKEYMAP_MASKED(L8, L9, my_keymask, ___, ! /* negate */)
-  XKEYMAP_ALL(L9, Key_M)
+  XKEYMAP_ALL(L9, Key_M) // All keys set to keycode Key_M
 )
 
 // Generate a layer stack that mimics the behavior of Kaleidoscope's

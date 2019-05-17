@@ -114,3 +114,17 @@ void loop() {
 }
 
 ```
+
+## Using XKeymaps to defined general layered data sets
+
+Besides being great for defining more flexible keymaps, Kaleidoscope-XKeymaps
+can also be used to define layered data sets of any kind. Just think about the `Key` data stored in the keymap being replaced with something else, say a color value.
+
+In the same fashion as key values can be requested at a given key position on
+a given layer, any alternative data type stored in the keymap can be requested.
+
+This feature can e.g. be useful to define RGB-colormaps or palette index maps.
+
+For such alternatve usecases, any `XKEYMAPS_...` macro function has a related `XKEYMAP_..._GENERIC` macro function that accepts additional arguments to generalize its behavior. Just see how the generic versions are used to define their non-generic siblings to learn about their usage.
+
+To use keymaps and e.g. color-maps or whatever else together, most generic versions of the macro functions accept a `NAME` parameter that can be used to give a data-set a unique name. The name `standard` is used by the non-generic macros for the standard keymap (that actually stores `Key` values).

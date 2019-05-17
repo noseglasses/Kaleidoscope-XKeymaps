@@ -71,7 +71,11 @@
           * toggle keys foolproof.                                      __NL__ \
           */                                                            __NL__ \
          if(valueFromOverlayPtr) {                                      __NL__ \
-            return (*valueFromOverlayPtr)(row, col);                    __NL__ \
+            PER_KEY_TYPE overlap_value                                  __NL__ \
+               = (*valueFromOverlayPtr)(row, col);                      __NL__ \
+            if(overlap_value != TRANSPARENT_VALUE) {                    __NL__ \
+               return overlap_value;                                    __NL__ \
+            }                                                           __NL__ \
          }                                                              __NL__ \
                                                                         __NL__ \
          return valueFromKeymap_(keymap, row, col);                     __NL__ \
@@ -104,7 +108,7 @@
                                                                         __NL__ \
       PER_KEY_TYPE valueFromOverlay(uint8_t row, uint8_t col) {         __NL__ \
          /* This switch is just necessary as the KEYMAP definition      __NL__ \
-          * macros feature case labels. By usign 255 here and           __NL__ \
+          * macros feature case labels. By using the value 255 here and __NL__ \
           * relying on C++'s switch case fallthrough in the absence     __NL__ \
           * of a break statement, we can be sure that the overlay       __NL__ \
           * case is always executed.                                    __NL__ \
@@ -168,9 +172,9 @@
 // Defines a sparse keymap.
 //
 #define XKEYMAP_SPARSE_GENERIC(PER_KEY_TYPE,                                   \
-                       KEYMAP,                                                 \
-                       DEFAULT_VALUE,                                          \
-                       ...)                                                    \
+                               KEYMAP,                                         \
+                               DEFAULT_VALUE,                                  \
+                               ...)                                            \
             case KEYMAP:                                                __NL__ \
             {                                                           __NL__ \
                const static SparseKeymapEntry<PER_KEY_TYPE>             __NL__ \
@@ -345,7 +349,7 @@ void valueFromSparseKeymap(uint8_t row, uint8_t col,
    for(uint8_t i = 0; i < entry_count; ++i) {
       uint8_t offset = pgm_read_byte(&(sparse_keymap[i].offset_));
       if(test_offset == offset) {
-         memcpy_P(&value, &(sparse_keymap[i].value_), sizeof(value));
+         memcpy_P(&value, &(sparse_keymap[i].value_), sizeof(_PerKeyType));
          return;
       }
    }

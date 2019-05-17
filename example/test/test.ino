@@ -51,6 +51,7 @@ XKEYMAP_OVERLAY(
       XKEYMAP_SPARSE_ENTRY(3, 8, ShiftToLayer(L5)),
       XKEYMAP_SPARSE_ENTRY(2, 8, ShiftToLayer(L6)),
       XKEYMAP_SPARSE_ENTRY(1, 8, ShiftToLayer(L7)),
+      XKEYMAP_SPARSE_ENTRY(0, 8, ShiftToLayer(L8)),
       XKEYMAP_SPARSE_ENTRY(0, 0, Key_R),
    )  
 )

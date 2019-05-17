@@ -32,9 +32,6 @@
                          FALLBACK_VALUE,                                       \
                          ...)                                                  \
                                                                         __NL__ \
-   /* Add an empty standard keymap to make Kaleidoscope happy */        __NL__ \
-   KEYMAPS()                                                            __NL__ \
-                                                                        __NL__ \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
    namespace NAME {                                                     __NL__ \
@@ -314,6 +311,10 @@
 //******************************************************************************
    
 #define XKEYMAP_LAYER_STACK                                                    \
+                                                                        __NL__ \
+   /* Add an empty standard keymap to make Kaleidoscope happy */        __NL__ \
+   KEYMAPS()                                                            __NL__ \
+                                                                        __NL__ \
    namespace kaleidoscope {                                             __NL__ \
    namespace xkeymaps {                                                 __NL__ \
    class XKeymaps : public kaleidoscope::Plugin {                       __NL__ \
